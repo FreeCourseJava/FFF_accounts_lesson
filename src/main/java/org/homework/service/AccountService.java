@@ -1,37 +1,29 @@
 package org.homework.service;
 
+import org.homework.annotation.Service;
 import org.homework.entity.Account;
-import org.homework.repository.AccountSerializer;
+import org.homework.repository.RepositoryAccount;
 
+@Service
 public class AccountService {
-    private AccountSerializer accountSerializer;
-    private Account[] accounts;
 
+    private RepositoryAccount accountRepo;
     private CurrencyService currencyServ;
 
-    public AccountService() {
-        accountSerializer = new AccountSerializer();
-        accounts = accountSerializer.read();
-        currencyServ = new CurrencyService();
+    public AccountService(RepositoryAccount accountRepo, CurrencyService currencyServ) {
+        this.accountRepo = accountRepo;
+        this.currencyServ = currencyServ;
+        System.out.println("Выполнен конструктор AccServ");
     }
 
-    private int getAccountNumber(String accName) {
-        for (int i = 0; i < accounts.length; i++) {
-            if (accounts[i].accountName.equals(accName)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public void cashTranslation(String donor, String acceptor, double sum) {
-        int donorNumber = getAccountNumber(donor);
-        if (donorNumber == -1) {
+     public void cashTranslation(String donor, String acceptor, double sum) {
+        Account donorAcc = accountRepo.getEntity(donor);
+        Account acceptorAcc = accountRepo.getEntity(acceptor);
+        if (donorAcc == null) {
             System.out.println("Аккаунт отправителя не существует");
             return;
         }
-        int acceptorNumber = getAccountNumber(acceptor);
-        if (donorNumber == -1 || acceptorNumber == -1) {
+        if (acceptorAcc == null) {
             System.out.println("Аккаунт получателя не существует");
             return;
         }
@@ -41,19 +33,19 @@ public class AccountService {
             return;
         }
 
-        if (accounts[donorNumber].balance < sum) {
+        if (donorAcc.balance < sum) {
             System.out.println("Недостаточно средств на счету отправителя");
             return;
         }
 
         double sumDonor = currencyServ.convertFromUSD(currencyServ.convertToUSD(sum, "RUB"),
-                accounts[donorNumber].currencyAbbrev);
+                donorAcc.currencyAbbrev);
         double sumAcceptor = currencyServ.convertFromUSD(currencyServ.convertToUSD(sum, "RUB"),
-                accounts[acceptorNumber].currencyAbbrev);
+                acceptorAcc.currencyAbbrev);
 
-        accounts[acceptorNumber].balance = accounts[acceptorNumber].balance + sumAcceptor;
-        accounts[donorNumber].balance = accounts[donorNumber].balance - sumDonor;
-        accountSerializer.write(accounts);
+        acceptorAcc.balance = acceptorAcc.balance + sumAcceptor;
+        donorAcc.balance = donorAcc.balance - sumDonor;
+        accountRepo.putEntities(donorAcc, acceptorAcc);
         System.out.println("Перевод осуществлен успешно. Счета обновлены");
     }
 

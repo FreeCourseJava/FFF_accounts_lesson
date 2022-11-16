@@ -3,23 +3,23 @@ package org.homework.repository;
 import com.google.gson.Gson;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Scanner;
 
-public abstract class SerializerAbstract<Type> implements JSONSerializer<Type> {
+public abstract class FileRepoAbstract<Type> implements Repository<Type> {
 
     private Class<Type[]> readType;
+
+    private Type[] records;
 
     private String fileName;
 
     private Gson gson;
 
-    public SerializerAbstract(Class<Type[]> readType, String fileName) {
+    public FileRepoAbstract(Class<Type[]> readType, String fileName) {
         this.readType = readType;
         this.gson = new Gson();
-        this.fileName=fileName;
+        this.fileName = fileName;
+        this.records = read();
     }
 
     @Override
@@ -49,5 +49,27 @@ public abstract class SerializerAbstract<Type> implements JSONSerializer<Type> {
         return gson.fromJson(temp, readType);
     }
 
+    @Override
+    public Type getEntity(String name) {
+        for (Type entity : records) {
+            if (entity.equals(name)) {
+                return entity;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void putEntities(Type objekt1, Type objekt2) {
+        for (Type entity : records) {
+            if (entity.equals(objekt1)) {
+                entity = objekt1;
+            }
+            if (entity.equals(objekt2)) {
+                entity = objekt2;
+            }
+        }
+        write(records);
+    }
 
 }
