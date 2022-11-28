@@ -5,6 +5,6 @@ public interface Repository<Type> {
 
     Type getEntity(String name);
 
-    void putEntity(Type objekt);
+    void updateNumericValue(Type objekt);
 
 }

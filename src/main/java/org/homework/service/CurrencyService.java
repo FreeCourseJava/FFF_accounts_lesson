@@ -26,10 +26,11 @@ public class CurrencyService {
     }
 
     public double convertToUSD(double sum, String abbrev) {
-        if (getRate(abbrev) == 0) {
+        double tempRate = getRate(abbrev);
+        if (tempRate == 0) {
             return 0;
         } else {
-            return sum / getRate(abbrev);
+            return sum / tempRate;
         }
     }
 

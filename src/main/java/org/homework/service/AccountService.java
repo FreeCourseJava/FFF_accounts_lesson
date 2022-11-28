@@ -45,8 +45,8 @@ public class AccountService {
 
         acceptorAcc.balance = acceptorAcc.balance + sumAcceptor;
         donorAcc.balance = donorAcc.balance - sumDonor;
-        accountRepo.putEntity(donorAcc);
-        accountRepo.putEntity(acceptorAcc);
+        accountRepo.updateNumericValue(donorAcc);
+        accountRepo.updateNumericValue(acceptorAcc);
         System.out.println("Перевод осуществлен успешно. Счета обновлены");
     }
 

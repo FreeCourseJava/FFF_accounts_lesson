@@ -1,8 +1,10 @@
 package org.homework.repository;
 
 import com.google.gson.Gson;
+import org.homework.annotation.ID;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.Scanner;
 
 public abstract class FileRepoAbstract<Type> implements Repository<Type> {
@@ -23,7 +25,7 @@ public abstract class FileRepoAbstract<Type> implements Repository<Type> {
     }
 
 
-    public void write(Type[] objekt) {
+    private void write(Type[] objekt) {
         String toWrite = gson.toJson(objekt);
         try (OutputStream outputStream = new FileOutputStream(fileName);
              PrintStream writer = new PrintStream(outputStream)) {
@@ -36,7 +38,7 @@ public abstract class FileRepoAbstract<Type> implements Repository<Type> {
     }
 
 
-    public Type[] read() {
+    private Type[] read() {
         String temp = "";
         try (InputStream inputStream = new FileInputStream(fileName);
              Scanner reader = new Scanner(inputStream)) {
@@ -49,10 +51,25 @@ public abstract class FileRepoAbstract<Type> implements Repository<Type> {
         return gson.fromJson(temp, readType);
     }
 
+    private String getTypeID(Type entity) {
+        Field[] fields = entity.getClass().getDeclaredFields();
+        String nameID = "";
+        for (Field tempField : fields) {
+            if (tempField.isAnnotationPresent(ID.class)) {
+                try {
+                    nameID = (String) tempField.get(entity);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return nameID;
+    }
+
     @Override
     public Type getEntity(String name) {
         for (Type entity : records) {
-            if (entity.equals(name)) {
+            if (getTypeID(entity).equals(name)) {
                 return entity;
             }
         }
@@ -60,9 +77,9 @@ public abstract class FileRepoAbstract<Type> implements Repository<Type> {
     }
 
     @Override
-    public void putEntity(Type objekt) {
+    public void updateNumericValue(Type objekt) {
         for (Type entity : records) {
-            if (entity.equals(objekt)) {
+            if (getTypeID(entity).equals(getTypeID(objekt))) {
                 entity = objekt;
             }
         }

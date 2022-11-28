@@ -40,12 +40,14 @@ public class CurrencyDataBaseRepo implements RepositoryCurrency {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
+        if (returnCurr.abbrev == null) {
+            return null;
+        }
         return returnCurr;
     }
 
     @Override
-    public void putEntity(Currency objekt) {
+    public void updateNumericValue(Currency objekt) {
         String statSQL = "UPDATE currencies SET rate = ? WHERE abbrev = ?";
         try {
             prepStat = connection.prepareStatement(statSQL);

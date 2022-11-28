@@ -42,12 +42,14 @@ public class AccountDataBaseRepo implements RepositoryAccount {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
+        if (returnAcc.accountName == null) {
+            return null;
+        }
         return returnAcc;
     }
 
     @Override
-    public void putEntity(Account objekt) {
+    public void updateNumericValue(Account objekt) {
         String statSQL = "UPDATE accounts SET balance = ? WHERE acc_name = ?";
         try {
             prepStat = connection.prepareStatement(statSQL);
