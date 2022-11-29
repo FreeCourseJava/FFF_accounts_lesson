@@ -1,14 +1,19 @@
 package org.homework.entity;
 
+import org.homework.annotation.Column;
 import org.homework.annotation.ID;
+import org.homework.annotation.Table;
 
 import java.util.Objects;
 
+@Table(name="currencies")
 public class Currency {
-    
+
+    @Column(name="rate")
     public double rateToUsd;
 
     @ID
+    @Column(name="abbrev")
     public String abbrev;
 
     @Override

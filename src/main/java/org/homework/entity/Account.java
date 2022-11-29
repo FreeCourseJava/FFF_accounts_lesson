@@ -1,16 +1,22 @@
 package org.homework.entity;
 
+import org.homework.annotation.Column;
 import org.homework.annotation.ID;
+import org.homework.annotation.Table;
 
 import java.util.Objects;
 
+@Table(name="accounts")
 public class Account {
 
     @ID
+    @Column(name="acc_name")
     public String accountName;
 
+    @Column(name="curr_id")
     public String currencyAbbrev;
 
+    @Column(name="balance")
     public double balance;
 
     @Override

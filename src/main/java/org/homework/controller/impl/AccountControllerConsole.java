@@ -8,15 +8,15 @@ import org.homework.service.AccountService;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-@Service
+//@Service
 
-public class AccountControllerImpl implements AccountController {
+public class AccountControllerConsole implements AccountController {
     private AccountService accServ;
-    public AccountControllerImpl(AccountService accServ){
+    public AccountControllerConsole(AccountService accServ){
         this.accServ = accServ;
-        System.out.println("Выполнен конструктор AccCtrl");
+        System.out.println("Выполнен конструктор AccCtrlConsole");
     }
-    @StartPoint
+   // @StartPoint
     @Override
     public void receiveCommand() {
         Scanner scanner = new Scanner(System.in);
