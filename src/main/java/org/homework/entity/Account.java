@@ -31,4 +31,13 @@ public class Account {
     public int hashCode() {
         return Objects.hash(accountName, currencyAbbrev, balance);
     }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "accountName='" + accountName + '\'' +
+                ", currencyAbbrev='" + currencyAbbrev + '\'' +
+                ", balance=" + balance +
+                '}';
+    }
 }

@@ -14,12 +14,12 @@ import java.net.Socket;
 import java.util.Scanner;
 
 @Service
-public class AccountControllerHTML implements AccountController {
+public class AccountControllerHTTP implements AccountController {
     private AccountService accServ;
 
-    public AccountControllerHTML(AccountService accServ) {
+    public AccountControllerHTTP(AccountService accServ) {
         this.accServ = accServ;
-        System.out.println("Выполнен конструктор AccCtrlHTML");
+        System.out.println("Выполнен конструктор AccCtrlHTTP");
     }
 
     @StartPoint

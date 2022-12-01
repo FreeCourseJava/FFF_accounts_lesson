@@ -28,4 +28,12 @@ public class Currency {
     public int hashCode() {
         return Objects.hash(rateToUsd, abbrev);
     }
+
+    @Override
+    public String toString() {
+        return "Currency{" +
+                "rateToUsd=" + rateToUsd +
+                ", abbrev='" + abbrev + '\'' +
+                '}';
+    }
 }
