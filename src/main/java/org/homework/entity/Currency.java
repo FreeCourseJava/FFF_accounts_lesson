@@ -1,8 +1,6 @@
 package org.homework.entity;
 
-import org.homework.annotation.Column;
-import org.homework.annotation.ID;
-import org.homework.annotation.Table;
+import org.homework.annotation.*;
 
 import java.util.Objects;
 
@@ -14,6 +12,8 @@ public class Currency {
 
     @ID
     @Column(name="abbrev")
+    @LinkedTable(name="accounts")
+    @LinkedEntity(name="curr_id", key = "id")
     public String abbrev;
 
     @Override

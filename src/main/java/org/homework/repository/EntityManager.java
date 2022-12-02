@@ -1,7 +1,6 @@
 package org.homework.repository;
 
-import org.homework.annotation.Column;
-import org.homework.annotation.Table;
+import org.homework.annotation.*;
 import org.homework.entity.Account;
 
 import java.lang.reflect.Field;
@@ -42,28 +41,47 @@ public class EntityManager {
         }
     }
 
-    public <Type> Type get(long id, Class<Type> clazz) {
-        Type returnObjekt = null;
+
+    private ResultSet execQuery(String stat) {
+        try {
+            Statement Stat = connection.createStatement();
+            return Stat.executeQuery(stat);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void execUpdate(String stat) {
+        try {
+            Statement Stat = connection.createStatement();
+            Stat.executeUpdate(stat);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public <TYPE> TYPE get(long id, Class<TYPE> clazz) {
+        TYPE returnObjekt = null;
         String anno;
         try {
-            returnObjekt = (Type) clazz.getConstructors()[0].newInstance();
+            returnObjekt = (TYPE) clazz.getConstructors()[0].newInstance();
             String tableName = clazz.getAnnotation(Table.class).name();
             Field[] fieldz = clazz.getDeclaredFields();
             String statSQL = "SELECT * FROM " + tableName + " WHERE id = " + Long.toString(id);
-            PreparedStatement prepStat = connection.prepareStatement(statSQL);
-            ResultSet rs = prepStat.executeQuery();
+            ResultSet rs = execQuery(statSQL);
             rs.next();
             for (Field tempField : fieldz) {
                 tempField.setAccessible(true);
                 anno = tempField.getAnnotation(Column.class).name();
                 Object param = rs.getObject(anno);
-                if (anno.equals("curr_id")) {
-                    String statSQL2 = "SELECT * FROM currencies WHERE id = ?";
-                    PreparedStatement prepStat2 = connection.prepareStatement(statSQL2);
-                    prepStat2.setObject(1, param);
-                    ResultSet rs2 = prepStat2.executeQuery();
+                if (tempField.isAnnotationPresent(LinkedEntity.class)) {
+                    String statSQL2 = "SELECT " + tempField.getAnnotation(LinkedEntity.class).name() + " FROM "
+                            + tempField.getAnnotation(LinkedTable.class).name() + " WHERE " +
+                            tempField.getAnnotation(LinkedEntity.class).key() + " = " + param;
+                    ResultSet rs2 = execQuery(statSQL2);
                     rs2.next();
-                    tempField.set(returnObjekt, rs2.getObject("abbrev"));
+                    tempField.set(returnObjekt, rs2.getObject(tempField.getAnnotation(LinkedEntity.class).name()));
                 } else {
                     tempField.set(returnObjekt, param);
                 }
@@ -74,65 +92,61 @@ public class EntityManager {
         return returnObjekt;
     }
 
-    public <Type> void updateNumericValue(Type objekt) {
+    public <TYPE> void updateNumericValue(TYPE objekt) {
         String tableName = objekt.getClass().getAnnotation(Table.class).name();
         Field[] fieldz = objekt.getClass().getDeclaredFields();
         String anno = "", value = "", id = "", toSet = "";
         try {
             for (Field tempField : fieldz) {
                 anno = tempField.getAnnotation(Column.class).name();
-                if (anno.equals("acc_name") || anno.equals("abbrev")) {
+                if (tempField.isAnnotationPresent(ID.class)) {
                     id = anno;
                     value = "'" + tempField.get(objekt) + "'";
                 }
-                if (anno.equals("balance") || anno.equals("rate")) {
+                if (tempField.getType() == double.class) {
                     String vvalue = tempField.get(objekt).toString();
                     toSet = anno + " = " + vvalue;
                 }
             }
             String statSQL = "UPDATE " + tableName + " SET " + toSet + " WHERE " + id + " = " + value;
-            PreparedStatement prepStat = connection.prepareStatement(statSQL);
-            prepStat.executeUpdate();
+            execUpdate(statSQL);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public <Type> void delete(Type objekt) {
+    public <TYPE> void delete(TYPE objekt) {
         String tableName = objekt.getClass().getAnnotation(Table.class).name();
         Field[] fieldz = objekt.getClass().getDeclaredFields();
         String anno = "", value = "", id = "";
         try {
             for (Field tempField : fieldz) {
                 anno = tempField.getAnnotation(Column.class).name();
-                if (anno.equals("acc_name")) {
+                if (tempField.isAnnotationPresent(ID.class)) {
                     id = anno;
-                    value = "'" + (String) tempField.get(objekt) + "'";
-                }
-                if (anno.equals("abbrev")) {
-                    id = anno;
-                    value = (String) tempField.get(objekt);
-                    tableName = tableName + ", accounts ";
-                    value = value + " AND curr_id = currencies.id";
+                    value = "'" + tempField.get(objekt) + "'";
+                    if (tempField.isAnnotationPresent(LinkedEntity.class)) {
+                        tableName = tableName + ", " + tempField.getAnnotation(LinkedTable.class).name();
+                        value = value + " AND " + tempField.getAnnotation(LinkedEntity.class).name()
+                                + " = " + tempField.getAnnotation(LinkedEntity.class).key();
+                    }
                 }
             }
             String statSQL = "DELETE FROM " + tableName + " WHERE " + id + " = " + value;
-            PreparedStatement prepStat = connection.prepareStatement(statSQL);
-            prepStat.executeUpdate();
+            execUpdate(statSQL);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public <Type> void insert(Type objekt) {
+    public <TYPE> void insert(TYPE objekt) {
         String tableName = objekt.getClass().getAnnotation(Table.class).name();
         Field[] fieldz = objekt.getClass().getDeclaredFields();
         String statSQL = "SELECT MAX(ID) FROM " + tableName;
         int id;
         String columns, values, temp;
         try {
-            PreparedStatement prepStat = connection.prepareStatement(statSQL);
-            ResultSet rs = prepStat.executeQuery();
+            ResultSet rs = execQuery(statSQL);
             rs.next();
             id = (int) rs.getObject("max");
             id++;
@@ -140,14 +154,15 @@ public class EntityManager {
             values = id + ",";
             for (Field tempField : fieldz) {
                 temp = tempField.getAnnotation(Column.class).name();
-                if (temp.equals("curr_id")) {
+                if (tempField.isAnnotationPresent(LinkedEntity.class)) {
                     columns = columns + temp + ",";
-                    String statSQL2 = "SELECT id FROM currencies WHERE abbrev =" + "'" + tempField.get(objekt) + "'";
-                    PreparedStatement prepStat2 = connection.prepareStatement(statSQL2);
-                    ResultSet rs2 = prepStat2.executeQuery();
+                    String statSQL2 = "SELECT " + tempField.getAnnotation(LinkedEntity.class).key() + " FROM "
+                            + tempField.getAnnotation(LinkedTable.class).name() + " WHERE " +
+                            tempField.getAnnotation(LinkedEntity.class).name() + " = " + "'" + tempField.get(objekt) + "'";
+                    ResultSet rs2 = execQuery(statSQL2);
                     rs2.next();
                     values = values + rs2.getObject("id") + ",";
-                } else if (temp.equals("acc_name") || temp.equals("abbrev")) {
+                } else if (tempField.isAnnotationPresent(ID.class)) {
                     columns = columns + temp + ",";
                     values = values + "'" + tempField.get(objekt) + "',";
                 } else {
@@ -157,8 +172,7 @@ public class EntityManager {
             }
             String statSQL3 = "INSERT INTO " + tableName + "(" + columns.substring(0, columns.length() - 1) + ") VALUES("
                     + values.substring(0, values.length() - 1) + ")";
-            PreparedStatement prepStat3 = connection.prepareStatement(statSQL3);
-            prepStat3.executeUpdate();
+            execUpdate(statSQL3);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
