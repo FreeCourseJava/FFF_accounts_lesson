@@ -1,14 +1,22 @@
 package org.homework.controller.impl;
 
+import org.homework.annotation.Service;
+import org.homework.annotation.StartPoint;
 import org.homework.controller.AccountController;
 import org.homework.service.AccountService;
 
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-public class AccountControllerImpl implements AccountController {
+//@Service
 
-
+public class AccountControllerConsole implements AccountController {
+    private AccountService accServ;
+    public AccountControllerConsole(AccountService accServ){
+        this.accServ = accServ;
+        System.out.println("Выполнен конструктор AccCtrlConsole");
+    }
+   // @StartPoint
     @Override
     public void receiveCommand() {
         Scanner scanner = new Scanner(System.in);
@@ -28,10 +36,8 @@ public class AccountControllerImpl implements AccountController {
             return;
         }
 
-        AccountService accServ = new AccountService();
         accServ.cashTranslation(donor,acceptor,sum);
 
-
-    }
+   }
 
 }

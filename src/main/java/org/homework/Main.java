@@ -1,14 +1,13 @@
 package org.homework;
 
-import org.homework.controller.AccountController;
-import org.homework.controller.impl.AccountControllerImpl;
+import org.homework.dependency.injection.DependencyInjection;
 
 public class Main {
 
     public static void main(String[] args) {
-        
-        AccountController accountController = new AccountControllerImpl();
-        accountController.receiveCommand();
+
+        System.out.println("Инициализация программы");
+        DependencyInjection.start();
     }
     
 }
